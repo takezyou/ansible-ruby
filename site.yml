@@ -1,0 +1,6 @@
+---
+- hosts: ruby
+  remote_user: ubuntu
+  gather_facts: false
+  roles:
+   - ruby

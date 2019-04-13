@@ -1,0 +1,60 @@
+---
+- name:
+  block:
+    - name: git clone rbenv
+      git:
+        repo: https://github.com/rbenv/rbenv.git
+        dest: ~/.rbenv
+        version: master
+
+    - name: export paths
+      raw: |
+        echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+        echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+        source ~/.bashrc
+
+    - name: apt-get update
+      apt:
+        update_cache: yes
+      become: yes
+
+    - name: install packages
+      apt:
+       name: "{{ packages }}"
+      vars:
+        packages:
+        - curl
+        - gcc
+        - make
+        - libssl-dev
+        - libreadline-dev
+        - zlib1g-dev
+        - htop
+        - vim
+      become: yes
+
+    - name: set path
+      raw: echo "$(rbenv root)"
+      register: rbenvPath
+
+    - debug: var=rbenvPath
+
+    - name: set up ruby-build
+      file:
+        path: "{{ rbenvPath }}/plugins"
+        state: directory
+
+    - name: git clone ruby-build
+      git:
+        repo: https://github.com/rbenv/ruby-build.git
+        dest: "{{ rbenvPath }}/plugins/ruby-build"
+        version: master
+
+    - name: curl rbenv-doctor
+      raw: curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor | bash
+
+    - name: install ruby 2.4.2
+      raw: |
+        rbenv install 2.4.2
+        rbenv rehash
+        rbenv global 2.4.2
